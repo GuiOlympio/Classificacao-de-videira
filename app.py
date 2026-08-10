@@ -7,9 +7,9 @@ import numpy as np
 import pandas as pd
 import plotly.express as px
 
-
+@st.cache_resource
 def carrega_modelo():
-  url= "Google drive ir la pega"
+  url= "https://colab.research.google.com/drive/1NiHVForsc3zOQ2_kr3yKXYgSujp008IA?usp=drive_link"
   gdown.download(url,"modelo_quantizado.tflite")
   interpreter = tf.lite.Interpreter(modelo_path = "modelo_quantizado.tflite")
   interpreter.allocate_tensors()
