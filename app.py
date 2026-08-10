@@ -4,6 +4,8 @@ import tensorflow as tf
 import io
 from PIL import Image
 import numpy as np
+import pandas as pd
+import plotly.express as px
 
 
 def carrega_modelo():
@@ -29,6 +31,31 @@ def carrega_imagem():
 
     return image
 
+
+def previsao(interpreter, image):
+  input_details = interpreter.get_input_details()
+  output_details = interpreter.get_output_details()
+
+  interpreter.set_tensor(input_details[0]['index'],image)
+
+  interpreter.invoke()
+
+  output_data = interpreter.get_tensor(output_details[0]['index'])
+  classes = ['LeafBlight', 'BlackRot', 'BlackMeasles', 'HealthyGrapes']
+
+  df = pd.DataFrame()
+  de['classes'] = classes
+  df['probabilidades(%)'] = 100*output_data[0]
+
+  fig = px.bar(df,
+               y='classes', 
+               x='probabilidades (%)', 
+               orientation ='h', 
+               text = 'probabilidades (%) de doenças em Uvas',)
+  st.plotly_chart(fig)
+ 
+
+
 def main():
 
   st.set_page_config(
@@ -41,7 +68,7 @@ def main():
   #Carrega modelo
   interpreter = carrega_modelo()
   #carrega imagem
-  imagem = carrega_imagem()
+  image = carrega_imagem()
 
   if image is not None:
     input_details = interpreter.get_input_details()
