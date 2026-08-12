@@ -1,139 +1,90 @@
 import streamlit as st
-import gdown
-import tensorflow as tf
-import io
 from PIL import Image
 import numpy as np
+import tensorflow as tf
 import pandas as pd
+import io
+import gdown
 import plotly.express as px
 
 
-def previsao(interpreter, image):
-    input_details = interpreter.get_input_details()
-    output_details = interpreter.get_output_details()
-
-    interpreter.set_tensor(input_details[0]['index'], image)
-    interpreter.invoke()
-
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    classes = ['BlackMeasles', 'BlackRot', 'HealthyGrapes', 'LeafBlight']
-
-    # Correção: DataFrame com 'F' maiúsculo
-    df = pd.DataFrame()
-    df['classes'] = classes
-    df['probabilidade (%)'] = 100 * output_data[0]
-
-    fig = px.bar(
-        df, 
-        y='classes', 
-        x='probabilidade (%)', 
-        orientation='h', 
-        text='probabilidade (%)',
-        title='Probabilidade de Classes de Doenças de Uva'
-    )
-
-    st.plotly_chart(fig)
 
 
+
+@st.cache_resource
 def carrega_modelo():
-    # Substitua pelo ID do arquivo do modelo hospedado no Google Drive:
-    # Exemplo: url = 'https://drive.google.com/uc?id=1234567890abc...'
-    url = "https://colab.research.google.com/drive/1NiHVForsc3zOQ2_kr3yKXYgSujp008IA?usp=drive_link"
-    
-    gdown.download(url, "modelo_quantizado.tflite", quiet=False)
-    
-    # Correção: model_path (em inglês)
-    interpreter = tf.lite.Interpreter(model_path="modelo_quantizado.tflite")
+    url = 'https://colab.research.google.com/drive/1NiHVForsc3zOQ2_kr3yKXYgSujp008IA?usp=drive_link'
+
+    gdown.download(url,'modelo_quantizado16bits.tflite')
+    interpreter = tf.lite.Interpreter(model_path='modelo_quantizado16bits.tflite')
     interpreter.allocate_tensors()
+
+
     return interpreter
 
 
 def carrega_imagem():
-    upload_file = st.file_uploader(
-        "Arraste e solte uma imagem aqui ou clique para selecionar uma", 
-        type=['png', 'jpg', 'jpeg']
-    )
-
-    if upload_file is not None:
-        # Correção: padronização para upload_file
-        image_data = upload_file.read()
+    # Cria um file uploader que permite o usuário carregar imagens
+    uploaded_file = st.file_uploader("Arraste e solte uma imagem aqui ou clique para selecionar uma", type=['png', 'jpg', 'jpeg'])
+    if uploaded_file is not None:
+        # Para ler a imagem como um objeto PIL Image
+        image_data = uploaded_file.read()
         image = Image.open(io.BytesIO(image_data))
 
-        # Redimensionar para a entrada esperada pelo modelo TFLite (256x256 por padrão)
-        image = image.resize((256, 256))
+        # Mostrar a imagem carregada
+        st.image(image)
+        st.success("Imagem carregada com sucesso!")
 
-        st.image(image, caption="Imagem Carregada")
-        st.success('Imagem foi carregada com sucesso!')
-
+        #Pré-processamento da imagem
         image = np.array(image, dtype=np.float32)
-        image = image / 255.0
-        image = np.expand.dims(image, axis=0)
+        image = image / 255.0  # Normalização para o intervalo [0, 1]
+        image = np.expand_dims(image, axis=0)
 
         return image
-    return None
 
 
+
+
+def previsao(interpreter,image):
+    # Obtém detalhes dos tensores de entrada e saída
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+
+    # Define o tensor de entrada para o modelo
+    interpreter.set_tensor(input_details[0]['index'], image)
+
+    # Executa a inferência
+    interpreter.invoke()
+
+    # Obtém a saída do modelo
+    output_data = interpreter.get_tensor(output_details[0]['index'])
+    classes = ['BlackMeasles', 'BlackRot', 'HealthyGrapes', 'LeafBlight']
+    df = pd.DataFrame()
+    df['classes'] = classes
+    df['probabilidades (%)'] = 100*output_data[0]
+    fig = px.bar(df, y='classes', x='probabilidades (%)', orientation='h', text='probabilidades (%)',
+             title='Probabilidade de Classes de Doenças em Uvas')
+    st.plotly_chart(fig)
+
+#
 def main():
     st.set_page_config(
-        page_title="Classifica folhas de videira",
-        page_icon="🍃",
+        page_title="Classifica Folhas de Videira",
+        page_icon="🍇",
     )
 
-    st.write("# Classifica folhas de videira!!")
-    
-    # Carrega modelo
+    st.write("# Classifica Folhas de Videira! 🍇")
+
+
     interpreter = carrega_modelo()
-    
-    # Carrega imagem
+
     image = carrega_imagem()
 
-    # Classifica
     if image is not None:
-        # Correção: passando os dois parâmetros corretamente
-        previsao(interpreter, image)
+
+        previsao(interpreter,image)
 
 
-# Correção: bloco fora da função main()
+
 if __name__ == "__main__":
-    main()
-
-
-def carrega_modelo():
-  url= "Google drive ir la pega"
-  gdown.download(url,"modelo_quantizado.tflite")
-  interpreter = tf.lite.Interpreter(modelo_path = "modelo_quantizado.tflite")
-  interpreter.allocate_tensors()
-  return interpreter
-
-def carrega_imagem():
-  upload_file = st.file_uploader("Arraste e solte uma imagem aqui ou clique para selecionar uma"), type= ['png','jpg', 'jpeg'])
-
-  if upload_file is not None:
-    image_data = uploaded_file.read()
-    image = Image.open(io.BytesIO(image_data))
-
-    st.image(image)
-    st.success('Imagem foi carregada com sucesso')
-
-    image = np.array(image, dtype = np.float32)
-    image = image / 255.0
-    image = np.expand.dims(image, axis = 0)
-
-    return image
-
-def main():
-
-  st.set_page_config(
-    page_title = "Classissifica folhas de videira",
-    page_icon = "🍃",
-  )
-
-  st.write("# Classissifica folhas de videira!!")
-  
-  #Carrega modelo
-  interpreter = carrega_modelo()
-  #carrega imagem
-  imagem = carrega_imagem()
-  # Classifica
-  if __name__ == "__main__":
     main()
