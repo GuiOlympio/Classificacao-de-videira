@@ -9,8 +9,6 @@ import plotly.express as px
 
 
 
-
-
 @st.cache_resource
 def carrega_modelo():
     # Link propio
@@ -73,9 +71,9 @@ def main():
         page_title="Classifica Folhas de Videira",
         page_icon="🍇",
     )
-
+    
     st.write("# Classifica Folhas de Videira! 🍇")
-
+    
 
     interpreter = carrega_modelo()
 
@@ -84,7 +82,7 @@ def main():
     if image is not None:
 
         previsao(interpreter,image)
-
+    
 
 
 if __name__ == "__main__":
