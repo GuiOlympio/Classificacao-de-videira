@@ -1,7 +1,5 @@
-numpy
-pandas
 streamlit
-pillow
-gdown
-plotly
 tensorflow
+numpy
+pillow
+opencv-python-headless
