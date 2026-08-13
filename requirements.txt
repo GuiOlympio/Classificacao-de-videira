@@ -1,7 +1,7 @@
-streamlit
-gdown
-tensorflow
-pillow
 numpy
 pandas
+streamlit
+pillow
+gdown
 plotly
+tensorflow
