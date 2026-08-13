@@ -12,7 +12,7 @@ import plotly.express as px
 @st.cache_resource
 def carrega_modelo():
     # Link propio
-    url = '/workspaces/Classificacao-de-videira/modelo_quantizado.tflite'
+    url = 'https://drive.google.com/file/d/17THXsjMh0yuzqgxrMXJcz6du1nka3b-m/view?usp=drive_link'
 
     gdown.download(url,'modelo_quantizado16bits.tflite')
     interpreter = tf.lite.Interpreter(model_path='modelo_quantizado16bits.tflite')
